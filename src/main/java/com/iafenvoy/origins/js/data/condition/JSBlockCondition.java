@@ -1,7 +1,10 @@
 package com.iafenvoy.origins.js.data.condition;
 
+import com.google.gson.JsonObject;
 import com.iafenvoy.origins.data.condition.BlockCondition;
 import com.iafenvoy.origins.js.OriginsJS;
+import com.iafenvoy.origins.js.util.JSUtil;
+import com.iafenvoy.origins.js.util.function.TriPredicate;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -11,12 +14,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiPredicate;
 
-public record JSBlockCondition(String callbackId) implements BlockCondition {
-    private static final Map<String, BiPredicate<Level, BlockPos>> CALLBACKS = new ConcurrentHashMap<>();
+public record JSBlockCondition(String callbackId, JsonObject params) implements BlockCondition {
+    private static final Map<String, TriPredicate<Level, BlockPos, JsonObject>> CALLBACKS = new ConcurrentHashMap<>();
     public static final MapCodec<JSBlockCondition> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.STRING.fieldOf("id").forGetter(JSBlockCondition::callbackId)
+            Codec.STRING.fieldOf("id").forGetter(JSBlockCondition::callbackId),
+            JSUtil.JSON_CODEC.optionalFieldOf("params", new JsonObject()).forGetter(JSBlockCondition::params)
     ).apply(instance, JSBlockCondition::new));
 
     @Override
@@ -26,9 +29,9 @@ public record JSBlockCondition(String callbackId) implements BlockCondition {
 
     @Override
     public boolean test(@NotNull Level level, @NotNull BlockPos pos) {
-        BiPredicate<Level, BlockPos> cb = CALLBACKS.get(this.callbackId);
+        TriPredicate<Level, BlockPos, JsonObject> cb = CALLBACKS.get(this.callbackId);
         if (cb != null) try {
-            return cb.test(level, pos);
+            return cb.test(level, pos, this.params);
         } catch (Exception e) {
             OriginsJS.LOGGER.error("[OriginsJS] Error in JS block condition '{}'", this.callbackId, e);
         }
@@ -36,7 +39,7 @@ public record JSBlockCondition(String callbackId) implements BlockCondition {
         return false;
     }
 
-    public static void register(String id, BiPredicate<Level, BlockPos> callback) {
+    public static void register(String id, TriPredicate<Level, BlockPos, JsonObject> callback) {
         CALLBACKS.put(id, callback);
     }
 

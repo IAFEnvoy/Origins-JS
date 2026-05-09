@@ -8,6 +8,7 @@ import com.mojang.serialization.MapCodec;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+@SuppressWarnings("unused")
 public final class OJSPowers {
     public static final DeferredRegister<MapCodec<? extends Power>> POWER_TYPE_REGISTRY = DeferredRegister.create(PowerRegistries.POWER_TYPE, OriginsJS.MOD_ID);
 

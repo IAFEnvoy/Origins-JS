@@ -20,7 +20,6 @@ think some APIs are weird or not well-designed, please let me know.
 ## Dependencies
 
 - [KubeJS](https://modrinth.com/mod/kubejs)
-- [Jupiter](https://modrinth.com/mod/jupiter)
 - [Origins (NeoForge)](https://modrinth.com/mod/origins-neoforge)
 
 ## Quick Start
@@ -60,66 +59,61 @@ holder.getAllOrigins().forEach(([layer, origin]) => console.log(`Layer ${layer}:
 ### 3. Register Custom Actions
 
 ```javascript
-// Entity Action
-OriginsJS.registerEntityAction("mypack:greet", (entity) => entity.tell("Hello from KubeJS!"));
-
-// Block Action — receives (level, pos, direction)
-OriginsJS.registerBlockAction("mypack:break_notify", (level, pos, dir) => {
-    let block = level.getBlockState(pos);
-    console.log(`Block ${block} at ${pos}`);
+// Entity Action — callback: (entity, params)
+OriginsJS.registerEntityAction("mypack:greet", (entity, params) => {
+    let msg = params.message || "Hello!";
+    entity.tell(msg);
 });
 
-// Item Action — receives (level, entity, slotAccess)
-OriginsJS.registerItemAction("mypack:modify", (level, entity, slot) => {
+// Block Action — callback: (level, pos, direction, params)
+OriginsJS.registerBlockAction("mypack:break_notify", (level, pos, dir, params) => {
+    console.log(`Block at ${pos}, check: ${params.check}`);
+});
+
+// Item Action — callback: (level, entity, slotAccess, params)
+OriginsJS.registerItemAction("mypack:modify", (level, entity, slot, params) => {
+    let count = params.count || 1;
     let stack = slot.get();
-    if (!stack.isEmpty()) stack.setCount(stack.getCount() + 1);
+    if (!stack.isEmpty()) stack.setCount(stack.getCount() + count);
 });
 
-// BiEntity Action — receives (actor, target)
-OriginsJS.registerBiEntityAction("mypack:splash", (actor, target) => target.addEffect("minecraft:slowness", 100, 1));
+// BiEntity Action — callback: (actor, target, params)
+OriginsJS.registerBiEntityAction("mypack:splash", (actor, target, params) => {
+    let duration = params.duration || 100;
+    target.addEffect("minecraft:slowness", duration, 1);
+});
 
-// JSON usage: { "type": "origins_js:js_entity_action", "id": "mypack:greet" }
+// JSON usage:
+// { "type": "origins_js:js_entity_action", "id": "mypack:greet", "params": { "message": "Hi!" } }
 ```
 
 ### 4. Register Custom Conditions
 
 ```javascript
-// Entity Condition
-OriginsJS.registerEntityCondition("mypack:low_health", (entity) => entity.health < 10);
+// Entity Condition — callback: (entity, params) => bool
+OriginsJS.registerEntityCondition("mypack:low_health", (entity, params) => {
+    let threshold = params.threshold || 10;
+    return entity.health < threshold;
+});
 
-// Block Condition — receives (level, pos)
-OriginsJS.registerBlockCondition("mypack:is_air", (level, pos) => level.isEmptyBlock(pos));
+// Block Condition — callback: (level, pos, params) => bool
+OriginsJS.registerBlockCondition("mypack:is_block", (level, pos, params) => {
+    let blockId = params.block || "minecraft:air";
+    return level.getBlockState(pos).is(blockId);
+});
 
-// Item Condition — receives (level, itemStack)
-OriginsJS.registerItemCondition("mypack:is_damaged", (level, stack) => stack.isDamaged());
-
-// BiEntity Condition — receives (actor, target)
-OriginsJS.registerBiEntityCondition("mypack:can_see", (actor, target) => actor.canSee(target));
-
-// Biome Condition — receives (biomeHolder, pos)
-OriginsJS.registerBiomeCondition("mypack:is_plains", (biome, pos) => biome.is("minecraft:plains"));
-
-// Damage Condition — receives (damageSource, amount)
-OriginsJS.registerDamageCondition("mypack:fire_damage", (source, amount) => source.isFire());
-
-// Fluid Condition — receives (fluidState)
-OriginsJS.registerFluidCondition("mypack:is_water", (state) => state.is("minecraft:water"));
-
-// JSON usage: { "type": "origins_js:js_entity_condition", "id": "mypack:low_health" }
+// JSON usage:
+// { "type": "origins_js:js_entity_condition", "id": "mypack:low_health", "params": { "threshold": 5 } }
 ```
 
 ### 5. Register Custom Powers
 
 ```javascript
-// Builder pattern — chain callbacks then call .register()
-// All of them are optional, but you must provide at least a grant/revoke or tick/active/inactive callback, otherwise the power won't do anything
+// All callbacks receive (holder, params) where params comes from JSON
 OriginsJS.powerBuilder("mypack:custom_power")
-    .grant((holder) => holder.getEntity().tell("Power granted!"))
-    .revoke((holder) => holder.getEntity().tell("Power revoked!"))
-    .tick((holder) => holder.getEntity().heal(0.5))
-    .active((holder) => holder.getEntity().addEffect("minecraft:glowing", 40, 0))
-    .inactive((holder) => holder.getEntity().removeEffect("minecraft:glowing"))
-    .isActive((holder) => holder.getEntity().isSprinting()) //This is not recommended, use condition field in JSON instead
+    .grant((holder, params) => holder.getEntity().tell(params.msg || "Granted!"))
+    .revoke((holder, params) => holder.getEntity().tell("Revoked!"))
+    .tick((holder, params) => holder.getEntity().heal(params.amount || 0.5))
     .register();
 ```
 
@@ -130,7 +124,11 @@ Usage in datapack JSON:
   "type": "origins_js:js_power",
   "id": "mypack:custom_power",
   "name": "My Custom Power",
-  "description": "A power defined in KubeJS scripts"
+  "description": "A power defined in KubeJS scripts",
+  "params": {
+    "msg": "Hello custom power!",
+    "amount": 1.0
+  }
 }
 ```
 
@@ -138,20 +136,20 @@ Usage in datapack JSON:
 
 All custom types use the `origins_js:` namespace prefix:
 
-| JSON `type`                        | Registration Method                        | Args                             |
-|------------------------------------|--------------------------------------------|----------------------------------|
-| `origins_js:js_entity_action`      | `registerEntityAction`                     | `(entity)`                       |
-| `origins_js:js_block_action`       | `registerBlockAction`                      | `(level, pos, direction)`        |
-| `origins_js:js_item_action`        | `registerItemAction`                       | `(level, entity, slotAccess)`    |
-| `origins_js:js_bientity_action`    | `registerBiEntityAction`                   | `(actor, target)`                |
-| `origins_js:js_entity_condition`   | `registerEntityCondition`                  | `(entity) => bool`               |
-| `origins_js:js_block_condition`    | `registerBlockCondition`                   | `(level, pos) => bool`           |
-| `origins_js:js_item_condition`     | `registerItemCondition`                    | `(level, itemStack) => bool`     |
-| `origins_js:js_bientity_condition` | `registerBiEntityCondition`                | `(actor, target) => bool`        |
-| `origins_js:js_biome_condition`    | `registerBiomeCondition`                   | `(biomeHolder, pos) => bool`     |
-| `origins_js:js_damage_condition`   | `registerDamageCondition`                  | `(damageSource, amount) => bool` |
-| `origins_js:js_fluid_condition`    | `registerFluidCondition`                   | `(fluidState) => bool`           |
-| `origins_js:js_power`              | `powerBuilder(id).grant/.../...register()` | Builder pattern                  |
+| JSON `type`                        | Registration Method                        | Callback Args                               |
+|------------------------------------|--------------------------------------------|---------------------------------------------|
+| `origins_js:js_entity_action`      | `registerEntityAction`                     | `(entity, params)`                          |
+| `origins_js:js_block_action`       | `registerBlockAction`                      | `(level, pos, direction, params)`           |
+| `origins_js:js_item_action`        | `registerItemAction`                       | `(level, entity, slotAccess, params)`       |
+| `origins_js:js_bientity_action`    | `registerBiEntityAction`                   | `(actor, target, params)`                   |
+| `origins_js:js_entity_condition`   | `registerEntityCondition`                  | `(entity, params) => bool`                  |
+| `origins_js:js_block_condition`    | `registerBlockCondition`                   | `(level, pos, params) => bool`              |
+| `origins_js:js_item_condition`     | `registerItemCondition`                    | `(level, itemStack, params) => bool`        |
+| `origins_js:js_bientity_condition` | `registerBiEntityCondition`                | `(actor, target, params) => bool`           |
+| `origins_js:js_biome_condition`    | `registerBiomeCondition`                   | `(biomeHolder, pos, params) => bool`        |
+| `origins_js:js_damage_condition`   | `registerDamageCondition`                  | `(damageSource, amount, params) => bool`    |
+| `origins_js:js_fluid_condition`    | `registerFluidCondition`                   | `(fluidState, params) => bool`              |
+| `origins_js:js_power`              | `powerBuilder(id).grant/.../...register()` | Builder: `.grant((holder, params) => ...)`  |
 
 ## HolderWrapper API Reference
 

@@ -10,6 +10,7 @@ import com.mojang.serialization.MapCodec;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+@SuppressWarnings("unused")
 public final class OJSActions {
     public static final DeferredRegister<MapCodec<? extends EntityAction>> ENTITY_ACTION_REGISTRY = DeferredRegister.create(ActionRegistries.ENTITY_ACTION, OriginsJS.MOD_ID);
     public static final DeferredRegister<MapCodec<? extends BlockAction>> BLOCK_ACTION_REGISTRY = DeferredRegister.create(ActionRegistries.BLOCK_ACTION, OriginsJS.MOD_ID);

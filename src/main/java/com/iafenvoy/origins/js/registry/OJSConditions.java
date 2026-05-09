@@ -7,6 +7,7 @@ import com.mojang.serialization.MapCodec;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+@SuppressWarnings("unused")
 public final class OJSConditions {
     public static final DeferredRegister<MapCodec<? extends EntityCondition>> ENTITY_CONDITION_REGISTRY = DeferredRegister.create(ConditionRegistries.ENTITY_CONDITION, OriginsJS.MOD_ID);
     public static final DeferredRegister<MapCodec<? extends BlockCondition>> BLOCK_CONDITION_REGISTRY = DeferredRegister.create(ConditionRegistries.BLOCK_CONDITION, OriginsJS.MOD_ID);

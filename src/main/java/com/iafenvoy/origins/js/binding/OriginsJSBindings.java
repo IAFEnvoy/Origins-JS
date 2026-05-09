@@ -1,5 +1,6 @@
 package com.iafenvoy.origins.js.binding;
 
+import com.google.gson.JsonObject;
 import com.iafenvoy.origins.attachment.OriginDataHolder;
 import com.iafenvoy.origins.js.OriginsJS;
 import com.iafenvoy.origins.js.data.action.JSBiEntityAction;
@@ -8,6 +9,9 @@ import com.iafenvoy.origins.js.data.action.JSEntityAction;
 import com.iafenvoy.origins.js.data.action.JSItemAction;
 import com.iafenvoy.origins.js.data.condition.*;
 import com.iafenvoy.origins.js.data.power.JSPower;
+import com.iafenvoy.origins.js.util.function.QuadConsumer;
+import com.iafenvoy.origins.js.util.function.TriPredicate;
+import com.iafenvoy.origins.util.TriConsumer;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,13 +24,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FluidState;
-import org.apache.commons.lang3.function.TriConsumer;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class OriginsJSBindings {
@@ -78,70 +79,70 @@ public class OriginsJSBindings {
 
     // ========== Actions ==========
 
-    @Info("Register entity action. JSON: origins_js:js_entity_action")
-    public static void registerEntityAction(String id, Consumer<Entity> action) {
+    @Info("Register entity action. Callback: (entity, params) => void. JSON: origins_js:js_entity_action")
+    public static void registerEntityAction(String id, BiConsumer<Entity, JsonObject> action) {
         JSEntityAction.register(id, action);
         OriginsJS.LOGGER.info("[OriginsJS] Registered entity action: {}", id);
     }
 
-    @Info("Register block action. JSON: origins_js:js_block_action")
-    public static void registerBlockAction(String id, TriConsumer<Level, BlockPos, Optional<Direction>> action) {
+    @Info("Register block action. Callback: (level, pos, direction, params) => void. JSON: origins_js:js_block_action")
+    public static void registerBlockAction(String id, QuadConsumer<Level, BlockPos, Optional<Direction>, JsonObject> action) {
         JSBlockAction.register(id, action);
         OriginsJS.LOGGER.info("[OriginsJS] Registered block action: {}", id);
     }
 
-    @Info("Register item action. JSON: origins_js:js_item_action")
-    public static void registerItemAction(String id, TriConsumer<Level, Entity, SlotAccess> action) {
+    @Info("Register item action. Callback: (level, entity, slotAccess, params) => void. JSON: origins_js:js_item_action")
+    public static void registerItemAction(String id, QuadConsumer<Level, Entity, SlotAccess, JsonObject> action) {
         JSItemAction.register(id, action);
         OriginsJS.LOGGER.info("[OriginsJS] Registered item action: {}", id);
     }
 
-    @Info("Register bi-entity action. JSON: origins_js:js_bientity_action")
-    public static void registerBiEntityAction(String id, BiConsumer<Entity, Entity> action) {
+    @Info("Register bi-entity action. Callback: (actor, target, params) => void. JSON: origins_js:js_bientity_action")
+    public static void registerBiEntityAction(String id, TriConsumer<Entity, Entity, JsonObject> action) {
         JSBiEntityAction.register(id, action);
         OriginsJS.LOGGER.info("[OriginsJS] Registered bi-entity action: {}", id);
     }
 
     // ========== Conditions ==========
 
-    @Info("Register entity condition. JSON: origins_js:js_entity_condition")
-    public static void registerEntityCondition(String id, Predicate<Entity> predicate) {
+    @Info("Register entity condition. Callback: (entity, params) => bool. JSON: origins_js:js_entity_condition")
+    public static void registerEntityCondition(String id, BiPredicate<Entity, JsonObject> predicate) {
         JSEntityCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered entity condition: {}", id);
     }
 
-    @Info("Register block condition. JSON: origins_js:js_block_condition")
-    public static void registerBlockCondition(String id, BiPredicate<Level, BlockPos> predicate) {
+    @Info("Register block condition. Callback: (level, pos, params) => bool. JSON: origins_js:js_block_condition")
+    public static void registerBlockCondition(String id, TriPredicate<Level, BlockPos, JsonObject> predicate) {
         JSBlockCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered block condition: {}", id);
     }
 
-    @Info("Register item condition. JSON: origins_js:js_item_condition")
-    public static void registerItemCondition(String id, BiPredicate<Level, ItemStack> predicate) {
+    @Info("Register item condition. Callback: (level, itemStack, params) => bool. JSON: origins_js:js_item_condition")
+    public static void registerItemCondition(String id, TriPredicate<Level, ItemStack, JsonObject> predicate) {
         JSItemCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered item condition: {}", id);
     }
 
-    @Info("Register bi-entity condition. JSON: origins_js:js_bientity_condition")
-    public static void registerBiEntityCondition(String id, BiPredicate<Entity, Entity> predicate) {
+    @Info("Register bi-entity condition. Callback: (actor, target, params) => bool. JSON: origins_js:js_bientity_condition")
+    public static void registerBiEntityCondition(String id, TriPredicate<Entity, Entity, JsonObject> predicate) {
         JSBiEntityCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered bi-entity condition: {}", id);
     }
 
-    @Info("Register biome condition. JSON: origins_js:js_biome_condition")
-    public static void registerBiomeCondition(String id, BiPredicate<Holder<Biome>, BlockPos> predicate) {
+    @Info("Register biome condition. Callback: (biomeHolder, pos, params) => bool. JSON: origins_js:js_biome_condition")
+    public static void registerBiomeCondition(String id, TriPredicate<Holder<Biome>, BlockPos, JsonObject> predicate) {
         JSBiomeCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered biome condition: {}", id);
     }
 
-    @Info("Register damage condition. JSON: origins_js:js_damage_condition")
-    public static void registerDamageCondition(String id, BiPredicate<DamageSource, Float> predicate) {
+    @Info("Register damage condition. Callback: (damageSource, amount, params) => bool. JSON: origins_js:js_damage_condition")
+    public static void registerDamageCondition(String id, TriPredicate<DamageSource, Float, JsonObject> predicate) {
         JSDamageCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered damage condition: {}", id);
     }
 
-    @Info("Register fluid condition. JSON: origins_js:js_fluid_condition")
-    public static void registerFluidCondition(String id, Predicate<FluidState> predicate) {
+    @Info("Register fluid condition. Callback: (fluidState, params) => bool. JSON: origins_js:js_fluid_condition")
+    public static void registerFluidCondition(String id, BiPredicate<FluidState, JsonObject> predicate) {
         JSFluidCondition.register(id, predicate);
         OriginsJS.LOGGER.info("[OriginsJS] Registered fluid condition: {}", id);
     }

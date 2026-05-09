@@ -1,7 +1,9 @@
 package com.iafenvoy.origins.js.data.condition;
 
+import com.google.gson.JsonObject;
 import com.iafenvoy.origins.data.condition.FluidCondition;
 import com.iafenvoy.origins.js.OriginsJS;
+import com.iafenvoy.origins.js.util.JSUtil;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -10,12 +12,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
-public record JSFluidCondition(String callbackId) implements FluidCondition {
-    private static final Map<String, Predicate<FluidState>> CALLBACKS = new ConcurrentHashMap<>();
+public record JSFluidCondition(String callbackId, JsonObject params) implements FluidCondition {
+    private static final Map<String, BiPredicate<FluidState, JsonObject>> CALLBACKS = new ConcurrentHashMap<>();
     public static final MapCodec<JSFluidCondition> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.STRING.fieldOf("id").forGetter(JSFluidCondition::callbackId)
+            Codec.STRING.fieldOf("id").forGetter(JSFluidCondition::callbackId),
+            JSUtil.JSON_CODEC.optionalFieldOf("params", new JsonObject()).forGetter(JSFluidCondition::params)
     ).apply(instance, JSFluidCondition::new));
 
     @Override
@@ -25,9 +28,9 @@ public record JSFluidCondition(String callbackId) implements FluidCondition {
 
     @Override
     public boolean test(@NotNull FluidState state) {
-        Predicate<FluidState> cb = CALLBACKS.get(this.callbackId);
+        BiPredicate<FluidState, JsonObject> cb = CALLBACKS.get(this.callbackId);
         if (cb != null) try {
-            return cb.test(state);
+            return cb.test(state, this.params);
         } catch (Exception e) {
             OriginsJS.LOGGER.error("[OriginsJS] Error in JS fluid condition '{}'", this.callbackId, e);
         }
@@ -35,7 +38,7 @@ public record JSFluidCondition(String callbackId) implements FluidCondition {
         return false;
     }
 
-    public static void register(String id, Predicate<FluidState> callback) {
+    public static void register(String id, BiPredicate<FluidState, JsonObject> callback) {
         CALLBACKS.put(id, callback);
     }
 

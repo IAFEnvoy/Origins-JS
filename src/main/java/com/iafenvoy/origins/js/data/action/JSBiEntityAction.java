@@ -1,7 +1,10 @@
 package com.iafenvoy.origins.js.data.action;
 
+import com.google.gson.JsonObject;
 import com.iafenvoy.origins.data.action.BiEntityAction;
 import com.iafenvoy.origins.js.OriginsJS;
+import com.iafenvoy.origins.js.util.JSUtil;
+import com.iafenvoy.origins.util.TriConsumer;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -10,12 +13,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 
-public record JSBiEntityAction(String callbackId) implements BiEntityAction {
-    private static final Map<String, BiConsumer<Entity, Entity>> CALLBACKS = new ConcurrentHashMap<>();
+public record JSBiEntityAction(String callbackId, JsonObject params) implements BiEntityAction {
+    private static final Map<String, TriConsumer<Entity, Entity, JsonObject>> CALLBACKS = new ConcurrentHashMap<>();
     public static final MapCodec<JSBiEntityAction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.STRING.fieldOf("id").forGetter(JSBiEntityAction::callbackId)
+            Codec.STRING.fieldOf("id").forGetter(JSBiEntityAction::callbackId),
+            JSUtil.JSON_CODEC.optionalFieldOf("params", new JsonObject()).forGetter(JSBiEntityAction::params)
     ).apply(instance, JSBiEntityAction::new));
 
     @Override
@@ -25,16 +28,16 @@ public record JSBiEntityAction(String callbackId) implements BiEntityAction {
 
     @Override
     public void execute(@NotNull Entity actor, @NotNull Entity target) {
-        BiConsumer<Entity, Entity> cb = CALLBACKS.get(this.callbackId);
+        TriConsumer<Entity, Entity, JsonObject> cb = CALLBACKS.get(this.callbackId);
         if (cb != null) try {
-            cb.accept(actor, target);
+            cb.accept(actor, target, this.params);
         } catch (Exception e) {
             OriginsJS.LOGGER.error("[OriginsJS] Error in JS bi-entity action '{}'", this.callbackId, e);
         }
         else OriginsJS.LOGGER.warn("[OriginsJS] Unknown JS bi-entity action '{}'", this.callbackId);
     }
 
-    public static void register(String id, BiConsumer<Entity, Entity> callback) {
+    public static void register(String id, TriConsumer<Entity, Entity, JsonObject> callback) {
         CALLBACKS.put(id, callback);
     }
 
