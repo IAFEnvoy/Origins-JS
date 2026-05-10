@@ -20,6 +20,7 @@ public class OriginsJSKubeJSPlugin implements KubeJSPlugin {
         registry.add("OriginsJS", OriginsJSBindings.class);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void clearCaches() {
         OriginsJSBindings.clearAll();

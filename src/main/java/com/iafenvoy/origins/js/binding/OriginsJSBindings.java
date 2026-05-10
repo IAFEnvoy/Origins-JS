@@ -154,6 +154,72 @@ public class OriginsJSBindings {
         return JSPower.forId(id);
     }
 
+    // ========== Resource ==========
+
+    @Info("Get resource value for a power. e.g. OriginsJS.getResource(entity, 'origins:climbing')")
+    public static int getResource(Entity entity, String powerId) {
+        HolderWrapper w = getHolder(entity);
+        return w != null ? w.getResource(powerId) : 0;
+    }
+
+    @Info("Set resource value for a power.")
+    public static void setResource(Entity entity, String powerId, int value) {
+        HolderWrapper w = getHolder(entity);
+        if (w != null) w.setResource(powerId, value);
+    }
+
+    @Info("Add to resource value (negative to subtract).")
+    public static void addResource(Entity entity, String powerId, int delta) {
+        HolderWrapper w = getHolder(entity);
+        if (w != null) w.addResource(powerId, delta);
+    }
+
+    // ========== Cooldown ==========
+
+    @Info("Get remaining cooldown ticks for a power.")
+    public static int getCooldown(Entity entity, String powerId) {
+        HolderWrapper w = getHolder(entity);
+        return w != null ? w.getCooldown(powerId) : 0;
+    }
+
+    @Info("Start the cooldown for a power.")
+    public static void startCooldown(Entity entity, String powerId) {
+        HolderWrapper w = getHolder(entity);
+        if (w != null) w.startCooldown(powerId);
+    }
+
+    @Info("Check if a cooldown is ready to use.")
+    public static boolean canUseCooldown(Entity entity, String powerId) {
+        HolderWrapper w = getHolder(entity);
+        return w != null && w.canUseCooldown(powerId);
+    }
+
+    // ========== Entity Set ==========
+
+    @Info("Add an entity to a power's entity set. Use entity.getStringUuid() for uuid.")
+    public static void addToEntitySet(Entity entity, String powerId, String uuid) {
+        HolderWrapper w = getHolder(entity);
+        if (w != null) w.addToEntitySet(powerId, uuid);
+    }
+
+    @Info("Remove an entity from a power's entity set.")
+    public static void removeFromEntitySet(Entity entity, String powerId, String uuid) {
+        HolderWrapper w = getHolder(entity);
+        if (w != null) w.removeFromEntitySet(powerId, uuid);
+    }
+
+    @Info("Check if an entity is in a power's entity set.")
+    public static boolean isInEntitySet(Entity entity, String powerId, String uuid) {
+        HolderWrapper w = getHolder(entity);
+        return w != null && w.isInEntitySet(powerId, uuid);
+    }
+
+    @Info("Get the size of a power's entity set.")
+    public static int getEntitySetSize(Entity entity, String powerId) {
+        HolderWrapper w = getHolder(entity);
+        return w != null ? w.getEntitySetSize(powerId) : 0;
+    }
+
     // ========== Utility ==========
 
     @Info("Clear all JS callbacks (called on /kubejs reload).")

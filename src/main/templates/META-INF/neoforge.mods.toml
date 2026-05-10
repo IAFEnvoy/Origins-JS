@@ -91,7 +91,7 @@ side = "BOTH"
 [[dependencies.${mod_id}]]
 modId = "origins"
 type = "required"
-versionRange = "[0.1-beta.3,)"
+versionRange = "[0.1-beta.5,)"
 ordering = "NONE"
 side = "BOTH"
 

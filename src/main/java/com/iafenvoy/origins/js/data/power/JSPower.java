@@ -39,7 +39,7 @@ public class JSPower extends Power {
 
     @Override
     public void grant(@NotNull OriginDataHolder holder) {
-        var m = CALLBACKS.get(this.callbackId);
+        Map<String, BiConsumer<OriginDataHolder, JsonObject>> m = CALLBACKS.get(this.callbackId);
         BiConsumer<OriginDataHolder, JsonObject> cb = m != null ? m.get("grant") : null;
         if (cb != null) try {
             cb.accept(holder, this.params);
@@ -50,7 +50,7 @@ public class JSPower extends Power {
 
     @Override
     public void revoke(@NotNull OriginDataHolder holder) {
-        var m = CALLBACKS.get(this.callbackId);
+        Map<String, BiConsumer<OriginDataHolder, JsonObject>> m = CALLBACKS.get(this.callbackId);
         BiConsumer<OriginDataHolder, JsonObject> cb = m != null ? m.get("revoke") : null;
         if (cb != null) try {
             cb.accept(holder, this.params);
@@ -61,7 +61,7 @@ public class JSPower extends Power {
 
     @Override
     public void tick(@NotNull OriginDataHolder holder) {
-        var m = CALLBACKS.get(this.callbackId);
+        Map<String, BiConsumer<OriginDataHolder, JsonObject>> m = CALLBACKS.get(this.callbackId);
         BiConsumer<OriginDataHolder, JsonObject> cb = m != null ? m.get("tick") : null;
         if (cb != null) try {
             cb.accept(holder, this.params);
@@ -84,7 +84,7 @@ public class JSPower extends Power {
 
     @Override
     public void active(@NotNull OriginDataHolder holder) {
-        var m = CALLBACKS.get(this.callbackId);
+        Map<String, BiConsumer<OriginDataHolder, JsonObject>> m = CALLBACKS.get(this.callbackId);
         BiConsumer<OriginDataHolder, JsonObject> cb = m != null ? m.get("active") : null;
         if (cb != null) try {
             cb.accept(holder, this.params);
@@ -95,7 +95,7 @@ public class JSPower extends Power {
 
     @Override
     public void inactive(@NotNull OriginDataHolder holder) {
-        var m = CALLBACKS.get(this.callbackId);
+        Map<String, BiConsumer<OriginDataHolder, JsonObject>> m = CALLBACKS.get(this.callbackId);
         BiConsumer<OriginDataHolder, JsonObject> cb = m != null ? m.get("inactive") : null;
         if (cb != null) try {
             cb.accept(holder, this.params);

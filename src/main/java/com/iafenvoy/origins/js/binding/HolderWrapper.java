@@ -7,6 +7,9 @@ import com.iafenvoy.origins.data.origin.Origin;
 import com.iafenvoy.origins.data.origin.OriginRegistries;
 import com.iafenvoy.origins.data.power.Power;
 import com.iafenvoy.origins.data.power.PowerRegistries;
+import com.iafenvoy.origins.data.power.component.builtin.CooldownComponent;
+import com.iafenvoy.origins.data.power.component.builtin.EntitySetComponent;
+import com.iafenvoy.origins.data.power.component.builtin.ResourceComponent;
 import com.iafenvoy.origins.util.RLHelper;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -19,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Wrapper around {@link OriginDataHolder} exposed to JavaScript.
@@ -197,6 +201,104 @@ public class HolderWrapper {
      */
     public List<String> getAllPowerIds() {
         return this.holder.getPowers().values().stream().map(RLHelper::string).distinct().toList();
+    }
+
+    // ========== Resource ==========
+
+    /**
+     * Get the current resource value for a power.
+     * @param powerId The power's ResourceLocation (e.g., "origins:climbing")
+     * @return The resource value, or 0 if not found
+     */
+    public int getResource(String powerId) {
+        return this.holder.getComponent(ResourceLocation.parse(powerId), ResourceComponent.class)
+                .map(ResourceComponent::getValue).orElse(0);
+    }
+
+    /**
+     * Set the resource value for a power.
+     */
+    public void setResource(String powerId, int value) {
+        this.holder.getComponent(ResourceLocation.parse(powerId), ResourceComponent.class)
+                .ifPresent(c -> c.updateResource((prev) -> value));
+    }
+
+    /**
+     * Add (or subtract, if negative) to the resource value.
+     */
+    public void addResource(String powerId, int delta) {
+        this.holder.getComponent(ResourceLocation.parse(powerId), ResourceComponent.class)
+                .ifPresent(c -> c.updateResource(prev -> prev + delta));
+    }
+
+    // ========== Cooldown ==========
+
+    /**
+     * Get the remaining cooldown ticks.
+     * @return The cooldown ticks, or 0 if not found
+     */
+    public int getCooldown(String powerId) {
+        return this.holder.getComponent(ResourceLocation.parse(powerId), CooldownComponent.class)
+                .map(CooldownComponent::getValue).orElse(0);
+    }
+
+    /**
+     * Start the cooldown for a power.
+     */
+    public void startCooldown(String powerId) {
+        this.holder.getComponent(ResourceLocation.parse(powerId), CooldownComponent.class)
+                .ifPresent(CooldownComponent::startCooldown);
+    }
+
+    /**
+     * Check whether the cooldown is ready (can be used).
+     */
+    public boolean canUseCooldown(String powerId) {
+        return this.holder.getComponent(ResourceLocation.parse(powerId), CooldownComponent.class)
+                .map(CooldownComponent::canUse).orElse(false);
+    }
+
+    // ========== Entity Set ==========
+
+    /**
+     * Add an entity (by UUID string) to a power's entity set.
+     */
+    public void addToEntitySet(String powerId, String uuidStr) {
+        this.holder.getComponent(ResourceLocation.parse(powerId), EntitySetComponent.class)
+                .ifPresent(c -> c.getSet().put(UUID.fromString(uuidStr), 0));
+    }
+
+    /**
+     * Remove an entity from a power's entity set.
+     */
+    public void removeFromEntitySet(String powerId, String uuidStr) {
+        this.holder.getComponent(ResourceLocation.parse(powerId), EntitySetComponent.class)
+                .ifPresent(c -> c.getSet().remove(UUID.fromString(uuidStr)));
+    }
+
+    /**
+     * Check if an entity is in a power's entity set.
+     */
+    public boolean isInEntitySet(String powerId, String uuidStr) {
+        return this.holder.getComponent(ResourceLocation.parse(powerId), EntitySetComponent.class)
+                .map(c -> c.getSet().containsKey(UUID.fromString(uuidStr))).orElse(false);
+    }
+
+    /**
+     * Get the number of entities in a power's entity set.
+     */
+    public int getEntitySetSize(String powerId) {
+        return this.holder.getComponent(ResourceLocation.parse(powerId), EntitySetComponent.class)
+                .map(c -> c.getSet().size()).orElse(0);
+    }
+
+    /**
+     * Get all UUID strings in a power's entity set.
+     */
+    public List<String> getEntitySetMembers(String powerId) {
+        return this.holder.getComponent(ResourceLocation.parse(powerId), EntitySetComponent.class)
+                .map(c -> c.getSet().keySet().stream().map(UUID::toString).toList())
+                .orElse(List.of());
     }
 
     // ========== Internal Helpers ==========
